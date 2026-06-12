@@ -26,7 +26,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="brand">cursor-looper</span>
+        <span className="brand">escalate</span>
         <span className="goal">
           $ <b>{artifact.goal_prompt}</b>
         </span>
