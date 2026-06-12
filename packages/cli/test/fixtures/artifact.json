@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "loop_id": "loop_test",
+  "goal_prompt": "/goal fix tests",
+  "repo": { "mode": "local", "path_or_url": "/tmp/repo", "baseline_ref": "HEAD" },
+  "model_ladder": ["grok-build-0.1", "composer-2.5"],
+  "rubric": {
+    "goal_summary": "fix tests",
+    "pass_threshold": 0.85,
+    "generated_by_model": "composer-2.5",
+    "frozen_at": "2026-06-11T00:00:00.000Z",
+    "criteria": [
+      {
+        "id": "tests_pass",
+        "statement": "Tests pass",
+        "type": "reward",
+        "weight": 10,
+        "check": "deterministic",
+        "command": "npm test",
+        "source": "generated"
+      }
+    ]
+  },
+  "iterations": [
+    {
+      "index": 0,
+      "model_id": "grok-build-0.1",
+      "tier": 0,
+      "started_at": "2026-06-11T00:00:00.000Z",
+      "finished_at": "2026-06-11T00:00:01.000Z",
+      "run_status": "finished",
+      "diff": "",
+      "diff_vs_prev": "",
+      "criterion_results": [{ "criterion_id": "tests_pass", "passed": false, "kind": "deterministic" }],
+      "score": 0.4,
+      "raw_assistant_summary": "first"
+    },
+    {
+      "index": 1,
+      "model_id": "composer-2.5",
+      "tier": 1,
+      "started_at": "2026-06-11T00:00:02.000Z",
+      "finished_at": "2026-06-11T00:00:03.000Z",
+      "run_status": "finished",
+      "diff": "diff --git a/src/add.js b/src/add.js\n+return a + b;\n",
+      "diff_vs_prev": "diff --git a/src/add.js b/src/add.js\n+return a + b;\n",
+      "criterion_results": [{ "criterion_id": "tests_pass", "passed": true, "kind": "deterministic" }],
+      "score": 0.6,
+      "raw_assistant_summary": "second"
+    }
+  ],
+  "events": [],
+  "comments": [],
+  "status": "running",
+  "progress": 0.6,
+  "created_at": "2026-06-11T00:00:00.000Z",
+  "updated_at": "2026-06-11T00:00:03.000Z"
+}

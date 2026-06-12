@@ -1,0 +1,21 @@
+{
+  "name": "@looper/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "cursor-looper": "./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "node --check src/index.ts",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@looper/core": "file:../core"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
