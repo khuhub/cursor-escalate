@@ -6,6 +6,7 @@ import { ScoreStrip } from "./components/ScoreStrip";
 import { DetailPanel } from "./components/DetailPanel";
 import { RubricSidebar } from "./components/RubricSidebar";
 import { ReplayBar } from "./components/ReplayBar";
+import { ModelSelect } from "./components/ModelSelect";
 
 type SidePanel = { kind: "detail"; selection: Exclude<NodeSelection, null> } | { kind: "rubric-edit" } | null;
 
@@ -33,13 +34,12 @@ export default function App() {
         <span className={`chip status-${statusClass}`}>
           <span className="dot" /> {replay.statusLabel}
         </span>
-        <span className="chip model" title="Current model in the ladder">
-          {replay.currentModel.label}
-          <span className="cost">{replay.currentModel.costTag}</span>
-          <span className="tier">
-            tier {replay.currentModel.tier + 1}/{artifact.model_ladder.length}
-          </span>
-        </span>
+        <ModelSelect
+          artifact={artifact}
+          replay={replay}
+          controls={controls}
+          onSeek={() => setPanel(null)}
+        />
         <button
           className={`btn${panel?.kind === "rubric-edit" ? " active" : ""}`}
           onClick={() => setPanel(panel?.kind === "rubric-edit" ? null : { kind: "rubric-edit" })}

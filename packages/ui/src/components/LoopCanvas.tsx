@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { LoopArtifact, LoopEvent, ModelInfo } from "../types";
 import type { NodeState, ReplayState } from "../replay/useReplay";
 import { fmtClock } from "../replay/useReplay";
@@ -71,23 +72,39 @@ function Cascade({ node }: { node: NodeState }) {
   );
 }
 
-function HoverCard({ artifact, node }: { artifact: LoopArtifact; node: NodeState }) {
+interface HoverAnchor {
+  x: number;
+  y: number;
+}
+
+function HoverCard({
+  artifact,
+  node,
+  anchor,
+}: {
+  artifact: LoopArtifact;
+  node: NodeState;
+  anchor: HoverAnchor;
+}) {
   const it = node.iteration;
   const model = modelOf(artifact, it.model_id);
+  const cardStyle = { left: anchor.x, top: anchor.y };
+
   if (!node.revealed) {
-    return (
-      <div className="hovercard">
+    return createPortal(
+      <div className="hovercard" style={cardStyle}>
         <div className="row"><span>Model</span><b>{model.label}</b></div>
         <div className="row"><span>Tier</span><b>{it.tier + 1} / {artifact.model_ladder.length}</b></div>
         <div className="row"><span>Status</span><b style={{ color: "var(--accent)" }}>{node.phase}…</b></div>
         <div className="hint">grade appears when the iteration finishes</div>
-      </div>
+      </div>,
+      document.body,
     );
   }
   const passed = it.criterion_results.filter((r) => r.passed).length;
   const fails = it.criterion_results.filter((r) => !r.passed);
-  return (
-    <div className="hovercard">
+  return createPortal(
+    <div className="hovercard" style={cardStyle}>
       <div className="row"><span>Model</span><b>{model.label}</b></div>
       <div className="row">
         <span>Quality / cost</span>
@@ -115,8 +132,14 @@ function HoverCard({ artifact, node }: { artifact: LoopArtifact; node: NodeState
         </div>
       )}
       <div className="hint">click to inspect diff & criterion breakdown</div>
-    </div>
+    </div>,
+    document.body,
   );
+}
+
+function anchorUnderNode(el: HTMLElement): HoverAnchor {
+  const rect = el.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.bottom + 10 };
 }
 
 function IterationNode({
@@ -130,16 +153,30 @@ function IterationNode({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const nodeRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
+  const [anchor, setAnchor] = useState<HoverAnchor | null>(null);
   const it = node.iteration;
   const model = modelOf(artifact, it.model_id);
   const live = node.phase !== "done";
+
+  const showHover = () => {
+    if (!nodeRef.current) return;
+    setAnchor(anchorUnderNode(nodeRef.current));
+    setHovered(true);
+  };
+  const hideHover = () => {
+    setHovered(false);
+    setAnchor(null);
+  };
+
   return (
     <div
+      ref={nodeRef}
       className={`node${selected ? " selected" : ""}${live ? " running" : ""}`}
       onClick={onSelect}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={showHover}
+      onMouseLeave={hideHover}
     >
       <div className="node-head">
         <span className="iter-badge">{it.index}</span>
@@ -176,7 +213,9 @@ function IterationNode({
           </span>
         </div>
       )}
-      {hovered && !selected && <HoverCard artifact={artifact} node={node} />}
+      {hovered && !selected && anchor && (
+        <HoverCard artifact={artifact} node={node} anchor={anchor} />
+      )}
     </div>
   );
 }

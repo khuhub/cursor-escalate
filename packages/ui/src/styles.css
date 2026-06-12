@@ -130,6 +130,55 @@ body {
 .chip.model .cost { color: var(--green); font-family: var(--mono); font-size: 10px; }
 .chip.model .tier { color: var(--faint); font-weight: 500; }
 
+.model-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.model-select:hover,
+.model-select:focus-within {
+  border-color: var(--accent);
+  background: var(--panel-3);
+}
+.model-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 26px 4px 10px;
+  pointer-events: none;
+  font-family: var(--mono);
+}
+.model-select-label .cost { color: var(--green); font-size: 10px; }
+.model-select-label .tier { color: var(--faint); font-weight: 500; }
+.model-select-label::after {
+  content: "▾";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--faint);
+  font-size: 10px;
+}
+.model-select-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 .btn {
@@ -257,6 +306,8 @@ body {
   min-width: 0;
   position: relative;
   overflow: auto;
+  display: flex;
+  align-items: center;
   background:
     radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 22px 22px,
     var(--bg);
@@ -266,9 +317,10 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 0;
-  padding: 36px 48px 60px;
-  min-height: 100%;
+  padding: 0 48px;
   width: max-content;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* ---------- nodes ---------- */
@@ -429,11 +481,9 @@ body {
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-/* hover card */
+/* hover card — fixed under node via portal; must not affect canvas layout */
 .hovercard {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
+  position: fixed;
   transform: translateX(-50%);
   width: 252px;
   background: var(--panel-2);
@@ -441,9 +491,13 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 12px;
-  z-index: 60;
+  z-index: 1000;
   pointer-events: none;
-  animation: step-in 0.15s ease;
+  animation: hovercard-in 0.12s ease;
+}
+@keyframes hovercard-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .hovercard .row {
   display: flex;
@@ -465,7 +519,7 @@ body {
   width: 56px;
   flex-shrink: 0;
   position: relative;
-  height: 47px; /* aligns with node head center */
+  height: 47px;
   align-self: flex-start;
 }
 .connector .line {
