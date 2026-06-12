@@ -117,6 +117,16 @@ export function useReplay(artifact: LoopArtifact): [ReplayState, ReplayControls]
   const [speed, setSpeedState] = useState(20);
   const raf = useRef<number | null>(null);
   const lastTick = useRef<number>(0);
+  const prevDuration = useRef(duration);
+
+  // Live loops grow: when new artifact data extends the timeline and the
+  // viewer was sitting at the live edge, keep them pinned there.
+  useEffect(() => {
+    if (duration !== prevDuration.current) {
+      setT((prev) => (prev >= prevDuration.current ? duration : Math.min(prev, duration)));
+      prevDuration.current = duration;
+    }
+  }, [duration]);
 
   useEffect(() => {
     if (!playing) return;

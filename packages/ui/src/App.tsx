@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MOCK_LOOP } from "./mock/loop";
+import { useLoopSource } from "./api/useLoopSource";
 import { useReplay } from "./replay/useReplay";
 import { LoopCanvas, type NodeSelection } from "./components/LoopCanvas";
 import { ScoreStrip } from "./components/ScoreStrip";
@@ -11,7 +11,7 @@ import { ModelSelect } from "./components/ModelSelect";
 type SidePanel = { kind: "detail"; selection: Exclude<NodeSelection, null> } | { kind: "rubric-edit" } | null;
 
 export default function App() {
-  const artifact = MOCK_LOOP;
+  const { artifact, source, loops, selectedId, select } = useLoopSource();
   const [replay, controls] = useReplay(artifact);
   const [panel, setPanel] = useState<SidePanel>(null);
 
@@ -31,6 +31,26 @@ export default function App() {
         <span className="goal">
           $ <b>{artifact.goal_prompt}</b>
         </span>
+        {source === "mock" ? (
+          <span className="chip" title="No live loops from the API — showing the demo recording">
+            mock data
+          </span>
+        ) : (
+          loops.length > 1 && (
+            <select
+              className="chip"
+              value={selectedId ?? ""}
+              onChange={(e) => select(e.target.value)}
+              title="Select loop"
+            >
+              {loops.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.id} · {l.status}
+                </option>
+              ))}
+            </select>
+          )
+        )}
         <span className={`chip status-${statusClass}`}>
           <span className="dot" /> {replay.statusLabel}
         </span>
@@ -73,7 +93,9 @@ export default function App() {
         {panel?.kind === "detail" && (
           <DetailPanel artifact={artifact} selection={panel.selection} onClose={() => setPanel(null)} />
         )}
-        {panel?.kind === "rubric-edit" && <RubricSidebar artifact={artifact} onClose={() => setPanel(null)} />}
+        {panel?.kind === "rubric-edit" && (
+          <RubricSidebar artifact={artifact} live={source === "live"} onClose={() => setPanel(null)} />
+        )}
       </main>
 
       <ReplayBar artifact={artifact} replay={replay} controls={controls} />

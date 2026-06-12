@@ -31,7 +31,44 @@ class VercelBlobStorage implements JsonStorage {
   }
 }
 
-let storage: JsonStorage = new VercelBlobStorage();
+/**
+ * Local-dev fallback: without a BLOB_READ_WRITE_TOKEN, store blobs as files
+ * under .looper-data/ so `next dev` works end-to-end with no Vercel account.
+ */
+class FileStorage implements JsonStorage {
+  private readonly root = `${process.cwd()}/.looper-data`;
+
+  private filePath(path: string): string {
+    return `${this.root}/${path.replace(/[^a-zA-Z0-9/_.-]/g, "_")}`;
+  }
+
+  async getJson<T>(path: string): Promise<T | null> {
+    const { readFile } = await import("node:fs/promises");
+    try {
+      return JSON.parse(await readFile(this.filePath(path), "utf8")) as T;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async putJson(path: string, value: unknown): Promise<void> {
+    const { mkdir, writeFile } = await import("node:fs/promises");
+    const file = this.filePath(path);
+    await mkdir(file.slice(0, file.lastIndexOf("/")), { recursive: true });
+    await writeFile(file, JSON.stringify(value, null, 2));
+  }
+}
+
+function defaultStorage(): JsonStorage {
+  return process.env.BLOB_READ_WRITE_TOKEN
+    ? new VercelBlobStorage()
+    : new FileStorage();
+}
+
+let storage: JsonStorage = defaultStorage();
 
 export function getStorage(): JsonStorage {
   return storage;
@@ -42,7 +79,7 @@ export function setStorageAdapter(adapter: JsonStorage): void {
 }
 
 export function resetStorageAdapter(): void {
-  storage = new VercelBlobStorage();
+  storage = defaultStorage();
 }
 
 function isMissingBlobError(error: unknown): boolean {

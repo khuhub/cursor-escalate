@@ -130,3 +130,33 @@ npm run dev:ui     # → http://localhost:5173
 The mock loop: 6 iterations across 3 ladder tiers (Grok Build 0.1 → Composer
 2.5 → Sonnet 4.6), one plateau escalation, one critical-criterion escalation,
 score trajectory 0.19 → 0.32 → 0.32 → 0.59 → 0.73 → 1.00, finishing `passed`.
+
+## Running against the real API
+
+The data-source swap is implemented in `packages/ui/src/api/`:
+
+- `client.ts` — fetch wrappers for `GET /api/loops`, `GET /api/loops/:id`,
+  `POST /api/loops/:id/comments`.
+- `adapter.ts` — converts the canonical core artifact (ISO timestamps, string
+  model ladder) into the UI artifact (ms offsets, `ModelInfo` ladder,
+  synthesized step cascades — the core artifact doesn't persist the SDK event
+  stream yet).
+- `useLoopSource.ts` — polls the index every 10 s and the selected loop every
+  2.5 s while it is live; falls back to the mock recording when the API is
+  empty or unreachable (a `mock data` chip appears in the top bar).
+
+Rubric-sidebar edits POST real `comment → rubric mutation` requests when
+viewing a live loop; set `VITE_LOOPER_API_TOKEN` so writes are authorized.
+
+```bash
+# terminal 1 — API on :3000 (uses .looper-data/ file storage when
+# BLOB_READ_WRITE_TOKEN is unset)
+LOOPER_API_TOKEN=dev-token npm run dev --workspace @looper/api
+
+# terminal 2 — seed a sample loop, then the UI (Vite proxies /api → :3000)
+LOOPER_API_TOKEN=dev-token npm run seed --workspace @looper/api
+VITE_LOOPER_API_TOKEN=dev-token npm run dev --workspace @looper/ui
+```
+
+URL params: `?loop=<id>` deep-links a loop, `?mock=1` forces the demo
+artifact. For a deployed UI, set `VITE_API_BASE` to the Vercel API origin.

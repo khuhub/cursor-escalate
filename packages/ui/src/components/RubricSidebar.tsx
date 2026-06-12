@@ -1,14 +1,33 @@
 import { useState } from "react";
 import type { Criterion, CriterionWeight, LoopArtifact } from "../types";
+import { postComment } from "../api/client";
 
 interface Props {
   artifact: LoopArtifact;
+  /** when true, queued mutations are POSTed to /api/loops/:id/comments */
+  live?: boolean;
   onClose: () => void;
 }
+
+type SyncState = "local" | "sending" | "synced" | "failed";
 
 interface QueuedMutation {
   action: "patch" | "add";
   criterion: Criterion;
+  sync: SyncState;
+}
+
+function syncLabel(sync: SyncState): string {
+  switch (sync) {
+    case "sending":
+      return "sending comment…";
+    case "synced":
+      return "mutation queued for next iteration";
+    case "failed":
+      return "send failed — check API token";
+    case "local":
+      return "queued locally (mock mode)";
+  }
 }
 
 /**
@@ -16,7 +35,7 @@ interface QueuedMutation {
  * is queued as a comment → rubric-mutation that the engine applies at the
  * next iteration boundary (handoff §6). This sidebar mimics that contract.
  */
-export function RubricSidebar({ artifact, onClose }: Props) {
+export function RubricSidebar({ artifact, live = false, onClose }: Props) {
   const [drafts, setDrafts] = useState<Record<string, Criterion>>({});
   const [queued, setQueued] = useState<QueuedMutation[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -28,29 +47,54 @@ export function RubricSidebar({ artifact, onClose }: Props) {
   const edit = (c: Criterion, patch: Partial<Criterion>) =>
     setDrafts((d) => ({ ...d, [c.id]: { ...draftFor(c), ...patch } }));
 
+  const setSync = (id: string, sync: SyncState) =>
+    setQueued((q) => q.map((m) => (m.criterion.id === id ? { ...m, sync } : m)));
+
+  // The frozen-rubric contract: edits never mutate the artifact directly —
+  // they ship as comments the engine turns into rubric mutations at the next
+  // iteration boundary.
+  const submit = (mutation: QueuedMutation, text: string, disputesCriterionId?: string) => {
+    if (!live) return;
+    setSync(mutation.criterion.id, "sending");
+    postComment(artifact.loop_id, {
+      node_ref: { type: "rubric" },
+      text,
+      ...(disputesCriterionId ? { disputes_criterion_id: disputesCriterionId } : {}),
+    })
+      .then(() => setSync(mutation.criterion.id, "synced"))
+      .catch(() => setSync(mutation.criterion.id, "failed"));
+  };
+
   const queuePatch = (c: Criterion) => {
-    setQueued((q) => [...q.filter((m) => m.criterion.id !== c.id), { action: "patch", criterion: draftFor(c) }]);
+    const d = draftFor(c);
+    const mutation: QueuedMutation = { action: "patch", criterion: d, sync: live ? "sending" : "local" };
+    setQueued((q) => [...q.filter((m) => m.criterion.id !== c.id), mutation]);
+    submit(
+      mutation,
+      `patch criterion ${c.id}: statement="${d.statement}" weight=${d.weight} type=${d.type}`,
+      c.id,
+    );
   };
 
   const queueAdd = () => {
     const text = newComment.trim();
     if (!text) return;
     const id = `comment_${queued.filter((q) => q.action === "add").length + 1}`;
-    setQueued((q) => [
-      ...q,
-      {
-        action: "add",
-        criterion: {
-          id,
-          statement: text,
-          type: "reward",
-          weight: 5,
-          check: "judged",
-          judge_hint: "Derived from user comment — verify against the diff.",
-          source: "comment",
-        },
+    const mutation: QueuedMutation = {
+      action: "add",
+      criterion: {
+        id,
+        statement: text,
+        type: "reward",
+        weight: 5,
+        check: "judged",
+        judge_hint: "Derived from user comment — verify against the diff.",
+        source: "comment",
       },
-    ]);
+      sync: live ? "sending" : "local",
+    };
+    setQueued((q) => [...q, mutation]);
+    submit(mutation, text);
     setNewComment("");
   };
 
@@ -111,7 +155,11 @@ export function RubricSidebar({ artifact, onClose }: Props) {
                 {dirty && !isQueued(c.id) && (
                   <button className="btn" onClick={() => queuePatch(c)}>Queue patch mutation</button>
                 )}
-                {isQueued(c.id) && <span className="tag comment-src">mutation queued for next iteration</span>}
+                {isQueued(c.id) && (
+                  <span className="tag comment-src">
+                    {syncLabel(queued.find((m) => m.criterion.id === c.id)!.sync)}
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -130,7 +178,7 @@ export function RubricSidebar({ artifact, onClose }: Props) {
                   <div className="meta">
                     <span className={`tag w${q.criterion.weight}`}>w{q.criterion.weight}</span>
                     <span className="tag judged">judged</span>
-                    <span className="tag comment-src">from comment</span>
+                    <span className="tag comment-src">from comment · {syncLabel(q.sync)}</span>
                   </div>
                 </div>
               ))}
