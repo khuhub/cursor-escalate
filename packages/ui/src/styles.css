@@ -1,4 +1,4 @@
-/* Cursor IDE dark theme — CursorGothic UI + Berkeley Mono code */
+/* Cursor IDE dark — neutral grays, Cursor orange accent, Berkeley Mono */
 @font-face {
   font-family: "CursorGothic";
   src: url("https://cursor.com/marketing-static/_next/static/media/CursorGothic_Regular-s.p.05-84umc_47y9.woff2") format("woff2");
@@ -22,19 +22,21 @@
 }
 
 :root {
-  --bg: #0a0d14;
-  --panel: #10141f;
-  --panel-2: #161c2a;
-  --panel-3: #1c2333;
-  --border: #232b3e;
-  --border-soft: #1b2233;
-  --text: #e7eaf2;
-  --muted: #8b94aa;
-  --faint: #5b6478;
-  --accent: #7c93ff;
-  --accent-soft: rgba(124, 147, 255, 0.14);
-  --green: #34d399;
-  --green-soft: rgba(52, 211, 153, 0.14);
+  --bg: #0b0b0b;
+  --panel: #121212;
+  --panel-2: #1a1a1a;
+  --panel-3: #1e1e1e;
+  --border: #2e2e2e;
+  --border-soft: #252525;
+  --text: #e4e4e4;
+  --muted: #9b9b9b;
+  --faint: #6e6e6e;
+  --cascade-text: #b8b8b8;
+  --accent: #bf7a52;
+  --accent-rgb: 191, 122, 82;
+  --accent-soft: rgba(var(--accent-rgb), 0.14);
+  --green: #4ade80;
+  --green-soft: rgba(74, 222, 128, 0.14);
   --red: #f87171;
   --red-soft: rgba(248, 113, 113, 0.14);
   --amber: #fbbf24;
@@ -44,7 +46,7 @@
   --mono: "berkeleyMono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --sans: "CursorGothic", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --radius: 10px;
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
 }
 
 * { box-sizing: border-box; }
@@ -54,7 +56,7 @@ html, body, #root { height: 100%; margin: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }
@@ -117,9 +119,9 @@ body {
 }
 .chip .dot { width: 7px; height: 7px; border-radius: 50%; }
 .chip.status-running .dot { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
-.chip.status-running { color: var(--accent); border-color: rgba(124, 147, 255, 0.4); }
+.chip.status-running { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); }
 .chip.status-passed .dot { background: var(--green); }
-.chip.status-passed { color: var(--green); border-color: rgba(52, 211, 153, 0.4); }
+.chip.status-passed { color: var(--green); border-color: rgba(74, 222, 128, 0.4); }
 .chip.status-generating .dot { background: var(--violet); animation: pulse 1.4s ease-in-out infinite; }
 .chip.status-generating { color: var(--violet); }
 .chip.status-exhausted .dot, .chip.status-error .dot { background: var(--red); }
@@ -141,14 +143,14 @@ body {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--sans);
+  font-family: var(--mono);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
 .btn:hover { background: var(--panel-3); border-color: var(--accent); }
-.btn.primary { background: var(--accent-soft); border-color: rgba(124, 147, 255, 0.45); color: var(--accent); }
-.btn.primary:hover { background: rgba(124, 147, 255, 0.24); }
+.btn.primary { background: var(--accent-soft); border-color: rgba(var(--accent-rgb), 0.45); color: var(--accent); }
+.btn.primary:hover { background: rgba(var(--accent-rgb), 0.24); }
 .btn.icon { padding: 6px 8px; }
 .btn.active { border-color: var(--accent); color: var(--accent); }
 
@@ -183,10 +185,10 @@ body {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, #4c5fd5, var(--accent));
+  background: linear-gradient(90deg, #a87250, var(--accent));
   transition: width 0.35s ease;
 }
-.score-fill.passed { background: linear-gradient(90deg, #15966b, var(--green)); }
+.score-fill.passed { background: linear-gradient(90deg, #22c55e, var(--green)); }
 .score-threshold {
   position: absolute;
   top: -5px;
@@ -256,7 +258,7 @@ body {
   position: relative;
   overflow: auto;
   background:
-    radial-gradient(circle at 1px 1px, rgba(124, 147, 255, 0.07) 1px, transparent 0) 0 0 / 22px 22px,
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 22px 22px,
     var(--bg);
 }
 
@@ -287,7 +289,7 @@ body {
 }
 .node:hover { border-color: var(--accent); }
 .node.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
-.node.running { border-color: rgba(124, 147, 255, 0.55); box-shadow: 0 0 18px rgba(124, 147, 255, 0.12); }
+.node.running { border-color: rgba(var(--accent-rgb), 0.55); box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.1); }
 .node.rubric-node { border-color: rgba(167, 139, 250, 0.4); }
 .node.rubric-node.selected { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15), var(--shadow); }
 
@@ -354,6 +356,17 @@ body {
   gap: 2px;
   max-height: 240px;
   overflow-y: auto;
+  background: var(--panel-2);
+}
+.cascade .step .txt {
+  color: var(--cascade-text);
+}
+.cascade .step.k-assistant .txt,
+.cascade .step.latest .txt {
+  color: var(--cascade-text);
+}
+.cascade .step.k-grading .txt {
+  color: var(--cascade-text);
 }
 .step {
   display: flex;
@@ -623,7 +636,7 @@ body {
   color: var(--text);
   border-radius: 7px;
   padding: 7px 9px;
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 11.5px;
   line-height: 1.45;
   resize: vertical;
@@ -639,14 +652,14 @@ body {
   font-size: 10.5px;
   font-family: var(--mono);
 }
-.crit-row.edited { border-color: rgba(124, 147, 255, 0.5); }
-.crit-row.queued { border-color: rgba(52, 211, 153, 0.5); }
+.crit-row.edited { border-color: rgba(var(--accent-rgb), 0.5); }
+.crit-row.queued { border-color: rgba(74, 222, 128, 0.5); }
 .mutation-note {
   font-size: 10.5px;
   line-height: 1.5;
   color: var(--muted);
   background: var(--accent-soft);
-  border: 1px solid rgba(124, 147, 255, 0.25);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
   border-radius: 8px;
   padding: 8px 10px;
 }
@@ -675,7 +688,7 @@ body {
   cursor: pointer;
   transition: background 0.15s;
 }
-.play-btn:hover { background: rgba(124, 147, 255, 0.28); }
+.play-btn:hover { background: rgba(var(--accent-rgb), 0.28); }
 .clock {
   font-family: var(--mono);
   font-size: 11.5px;
@@ -713,7 +726,7 @@ body {
   position: absolute;
   top: 13px;
   height: 5px;
-  background: rgba(124, 147, 255, 0.28);
+  background: rgba(var(--accent-rgb), 0.28);
   border-radius: 2px;
 }
 .scrubber .marker {
@@ -755,7 +768,7 @@ body {
   background: var(--text);
   transform: translateX(-50%);
   z-index: 4;
-  box-shadow: 0 0 8px rgba(231, 234, 242, 0.5);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
 .speed-select {
   background: var(--panel-2);
