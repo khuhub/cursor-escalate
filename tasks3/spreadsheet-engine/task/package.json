@@ -1,0 +1,16 @@
+{
+  "name": "spreadsheet-engine-task",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:values": "node --test test/01-values.test.js",
+    "test:arithmetic": "node --test test/02-arithmetic.test.js",
+    "test:references": "node --test test/03-references.test.js",
+    "test:functions": "node --test test/04-functions.test.js",
+    "test:gauntlet": "node --test test/05-gauntlet.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
