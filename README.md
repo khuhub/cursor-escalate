@@ -1,14 +1,23 @@
-# cursor-looper
+# Cursor Escalate
 
-`cursor-looper` turns a one-line goal into a durable, inspectable coding loop artifact. The CLI is a thin layer over `@looper/core`: it parses commands, prints progress, and delegates loop creation, reruns, cancellation, store access, and model ladder resolution to core exports.
+Turn a one-line goal into a durable, inspectable coding loop. Cursor Escalate runs a Cursor SDK agent against your goal, grades each iteration with a frozen rubric, and **escalates up a model ladder** — from cheap and fast to strong and expensive — only when progress stalls. Every run is a single JSON artifact you can replay, diff, and comment on.
+
+> The CLI binary is currently `cursor-looper` (rename pending). Commands below use the real binary name.
+
+## How It Works
+
+1. **Goal in.** You give a goal; an agent on the strongest ladder model generates a rubric, which is then frozen.
+2. **Iterate.** Cursor Escalate runs the cheapest model, applies a diff, and scores it against the frozen rubric.
+3. **Escalate.** When a tier plateaus, a critical criterion fails twice in a row, a run errors non-retryably, or a per-tier/global cap is hit, the loop steps up to the next model.
+4. **Artifact out.** The whole trajectory — diffs, scores, criteria flips, model transitions — is persisted as one JSON artifact.
 
 ## Requirements
 
 - Node 22 or newer.
 - `CURSOR_API_KEY` from [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations) for real Cursor SDK runs.
-- Optional `.env` file. Node does not load it automatically, so use `node --env-file=.env ...` or export variables in your shell.
+- Optional `.env`. Node does not auto-load it — run with `node --env-file=.env ...` or export the variables in your shell.
 
-Copy `.env.example` when configuring a local environment:
+Copy `.env.example` to start:
 
 ```bash
 CURSOR_API_KEY=...
@@ -20,29 +29,29 @@ BLOB_READ_WRITE_TOKEN=...
 ## CLI
 
 ```bash
-cursor-looper "/goal <text>"
-cursor-looper "/goal <text>" --cloud <url>
-cursor-looper rerun <loop_id>
-cursor-looper status <loop_id>
-cursor-looper show <loop_id>
-cursor-looper show <loop_id> --iteration <n>
-cursor-looper cancel <loop_id>
-cursor-looper ladder
+cursor-looper "/goal <text>"                 # start a loop in the current directory
+cursor-looper "/goal <text>" --cloud <url>   # run against the cloud runtime
+cursor-looper rerun <loop_id>                # replay a loop, seeded with learned criteria
+cursor-looper status <loop_id>               # progress bar, current tier/model, score history
+cursor-looper show <loop_id>                 # frozen rubric + latest diff
+cursor-looper show <loop_id> --iteration <n> # one iteration's criterion results + diff
+cursor-looper cancel <loop_id>               # mark the loop cancelled in the store
+cursor-looper ladder                         # print the resolved model ladder
 ```
 
 Flags for loop creation:
 
-- `--max-iterations <n>`
-- `--per-tier-cap <n>`
-- `--ladder a,b,c`
-- `--threshold <n>`
-- `--cloud <url>` switches from local cwd runtime to cloud runtime. Cloud core configuration must use `autoCreatePR: false`; the loop owns branch state, not PR creation.
+- `--max-iterations <n>` — global iteration cap.
+- `--per-tier-cap <n>` — max iterations before forcing escalation.
+- `--ladder a,b,c` — override the model ladder.
+- `--threshold <n>` — passing score threshold.
+- `--cloud <url>` — switch from the local cwd runtime to the cloud runtime. Cloud config must set `autoCreatePR: false`; the loop owns branch state, not PR creation.
 
-The default runtime is the current working directory. Artifacts are written to `~/.cursor-looper/loops/<loop_id>.json`; set `LOOPER_STORE_DIR` to override this in tests.
+Artifacts are written to `~/.cursor-looper/loops/<loop_id>.json`. Set `LOOPER_STORE_DIR` to override (used in tests).
 
-`status` prints the progress bar, current or last tier/model, and score history. `show` prints the frozen rubric and latest diff; `show --iteration` prints one iteration node with criterion results and its diff. `cancel` marks the artifact cancelled in the store. Cross-process live `run.cancel()` is not available in this CLI layer yet; cancellation is persisted and visible to readers, but an already-running Cursor SDK process must cooperate in core to stop immediately.
+> `cancel` persists cancellation to the artifact so readers see it immediately, but it does not yet kill an in-flight Cursor SDK process across processes — core must cooperate to stop a running agent early.
 
-## Model Ladder And Escalation
+## Model Ladder & Escalation
 
 Default ladder, cheapest to strongest:
 
@@ -51,48 +60,59 @@ Default ladder, cheapest to strongest:
 3. `sonnet-4.6`
 4. `gpt-5.5`
 
-The core Cursor wrapper is responsible for resolving these ids against `Cursor.models.list()` and failing with a clear model list if an id cannot be resolved. Escalation happens when a tier plateaus, the same critical criterion fails in consecutive iterations, a run errors non-retryably, or a per-tier/global cap is reached.
+The core Cursor wrapper resolves these ids against `Cursor.models.list()` and fails with a clear model list if an id can't be resolved. Override per-run with `--ladder`.
 
-## Rubrics And Comments
+## Rubrics & Comments
 
-The initial rubric is generated by a Cursor SDK agent on the strongest ladder model, then frozen. Iterations are graded against that rubric. Comments are the only sanctioned mutation path: a comment pinned to a rubric or iteration node is converted by a Cursor SDK agent into a criterion add, patch, or calibration example. The artifact records both the comment and resulting rubric mutation, so future reruns can seed the generator with learned criteria.
+The initial rubric is generated by a Cursor SDK agent on the strongest ladder model, then frozen — every iteration is graded against that same rubric.
 
-## API Routes
+Comments are the **only** sanctioned way to change a rubric. A comment pinned to a rubric or iteration node is converted by an agent into a criterion add, patch, or calibration example. The artifact records both the comment and the resulting mutation, so future `rerun`s seed the generator with learned criteria.
 
-The Vercel API workstream exposes JSON only, with no UI beyond a minimal loop list:
+## API
 
-- `PUT /api/loops/:id` upserts a full artifact. Requires `Authorization: Bearer $LOOPER_API_TOKEN`.
-- `GET /api/loops` lists loop index entries.
-- `GET /api/loops/:id` returns a full artifact.
-- `GET /api/loops/:id/trajectory` returns score trajectory and flipped criteria.
-- `GET /api/loops/:id/iterations/:n` returns one iteration slice.
-- `GET /api/loops/:id/diff?from=2&to=5` returns diff and score/model/criteria deltas.
-- `POST /api/loops/:id/comments` appends a pending comment. Requires auth.
-- `GET /api/loops/:id/comments?pending=1` returns comments awaiting rubric mutation.
+The Vercel API exposes JSON only (plus a minimal loop list — there is no graph UI in scope; consumers render the API payloads or artifact JSON directly).
 
-Vercel environment variables:
+| Method & Route | Description | Auth |
+| --- | --- | --- |
+| `PUT /api/loops/:id` | Upsert a full artifact | Bearer |
+| `GET /api/loops` | List loop index entries | — |
+| `GET /api/loops/:id` | Return a full artifact | — |
+| `GET /api/loops/:id/trajectory` | Score trajectory + flipped criteria | — |
+| `GET /api/loops/:id/iterations/:n` | One iteration slice | — |
+| `GET /api/loops/:id/diff?from=2&to=5` | Diff + score/model/criteria deltas | — |
+| `POST /api/loops/:id/comments` | Append a pending comment | Bearer |
+| `GET /api/loops/:id/comments?pending=1` | Comments awaiting mutation | — |
 
-- `BLOB_READ_WRITE_TOKEN`
-- `LOOPER_API_TOKEN`
+Bearer auth uses `Authorization: Bearer $LOOPER_API_TOKEN`. Vercel env vars: `BLOB_READ_WRITE_TOKEN`, `LOOPER_API_TOKEN`.
 
-There is no graph UI in scope. Consumers should render API payloads or artifact JSON.
+## Packages
 
-## Smoke Example And E2E
+| Package | What it is |
+| --- | --- |
+| `@looper/core` | Loop engine: rubric, scorer, escalation, Cursor wrapper, store, git. The CLI and API are thin layers over this. |
+| `@looper/cli` | `cursor-looper` command — parses input, prints progress, delegates to core. |
+| `@looper/api` | Next.js JSON API deployed on Vercel. |
+| `@looper/ui` | Minimal Vite/React viewer for loop artifacts. |
 
-`examples/smoke-task` is a tiny Node project with one failing test and one source file. The e2e command is:
+## Smoke Example & E2E
+
+`examples/smoke-task` is a tiny Node project with one failing test and one source file:
 
 ```bash
 cursor-looper "/goal make the failing test in examples/smoke-task pass" --ladder grok-build-0.1
 ```
 
-The real SDK e2e test is skipped unless `CURSOR_API_KEY` exists. When enabled, it runs from `examples/smoke-task`, forces a single cheap model, and asserts that the loop passes, at least one iteration exists, the iteration diff is non-empty, and the rubric was generated by an agent call.
+The real SDK e2e test is skipped unless `CURSOR_API_KEY` is set. When enabled it runs from `examples/smoke-task`, forces a single cheap model, and asserts the loop passes, at least one iteration exists, the diff is non-empty, and the rubric came from an agent call.
 
 ## Development
 
 ```bash
 pnpm install
+pnpm build         # build all packages
+pnpm test          # test all packages
+
 pnpm --filter @looper/cli build
 pnpm --filter @looper/cli test
-pnpm build
-pnpm test
+pnpm dev:ui        # run the artifact viewer
 ```
+
