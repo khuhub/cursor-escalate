@@ -1,0 +1,12 @@
+{
+  "name": "cursor-looper",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:ui": "npm run dev --workspace @looper/ui",
+    "build:ui": "npm run build --workspace @looper/ui"
+  }
+}
