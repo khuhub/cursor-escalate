@@ -306,6 +306,8 @@ body {
   min-width: 0;
   position: relative;
   overflow: auto;
+  display: flex;
+  align-items: center;
   background:
     radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 22px 22px,
     var(--bg);
@@ -313,12 +315,12 @@ body {
 
 .canvas {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0;
   padding: 0 48px;
-  min-height: 100%;
   width: max-content;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* ---------- nodes ---------- */
