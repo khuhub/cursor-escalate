@@ -40,6 +40,26 @@ export function ReplayBar({ artifact, replay, controls }: Props) {
     dragging.current = false;
   };
 
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 30_000 : 5_000;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      controls.pause();
+      controls.seek(Math.max(0, replay.t - step));
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      controls.pause();
+      controls.seek(Math.min(replay.duration, replay.t + step));
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      controls.pause();
+      controls.seek(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      controls.jumpToLive();
+    }
+  };
+
   const pct = (at: number) => `${(at / replay.duration) * 100}%`;
 
   return (
@@ -60,9 +80,17 @@ export function ReplayBar({ artifact, replay, controls }: Props) {
       <div
         className="scrubber"
         ref={trackRef}
+        role="slider"
+        tabIndex={0}
+        aria-label="Replay timeline"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(replay.duration)}
+        aria-valuenow={Math.round(replay.t)}
+        aria-valuetext={`${fmtClock(replay.t)} of ${fmtClock(replay.duration)}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onKeyDown={onKeyDown}
       >
         <div className="track" />
         {artifact.iterations.map((it) => (

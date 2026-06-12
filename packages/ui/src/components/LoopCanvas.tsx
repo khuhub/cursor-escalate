@@ -142,6 +142,12 @@ function anchorUnderNode(el: HTMLElement): HoverAnchor {
   return { x: rect.left + rect.width / 2, y: rect.bottom + 10 };
 }
 
+function activateOnKeyboard(e: React.KeyboardEvent, onSelect: () => void) {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  e.preventDefault();
+  onSelect();
+}
+
 function IterationNode({
   artifact,
   node,
@@ -174,7 +180,12 @@ function IterationNode({
     <div
       ref={nodeRef}
       className={`node${selected ? " selected" : ""}${live ? " running" : ""}`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={`Inspect iteration ${it.index}`}
       onClick={onSelect}
+      onKeyDown={(e) => activateOnKeyboard(e, onSelect)}
       onMouseEnter={showHover}
       onMouseLeave={hideHover}
     >
@@ -235,7 +246,12 @@ function RubricNode({
   return (
     <div
       className={`node rubric-node${selected ? " selected" : ""}${done ? "" : " running"}`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label="Inspect rubric"
       onClick={onSelect}
+      onKeyDown={(e) => activateOnKeyboard(e, onSelect)}
     >
       <div className="node-head">
         <span className="iter-badge">R</span>

@@ -16,16 +16,18 @@ export function ScoreStrip({ bestScore, threshold, finishedScores, passed, onTic
           style={{ width: `${bestScore * 100}%` }}
         />
         {finishedScores.map(({ index, score }) => (
-          <div
+          <button
             key={index}
             className="score-tick"
             style={{ left: `${score * 100}%` }}
+            type="button"
+            aria-label={`Inspect iteration ${index}, score ${score.toFixed(2)}`}
             onClick={() => onTickClick(index)}
           >
             <div className="tip">
               iter {index} — {score.toFixed(2)}
             </div>
-          </div>
+          </button>
         ))}
         <div className="score-threshold" style={{ left: `${threshold * 100}%` }}>
           <div className="tag">pass ≥ {threshold.toFixed(2)}</div>
