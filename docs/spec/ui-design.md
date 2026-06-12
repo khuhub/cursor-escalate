@@ -143,7 +143,7 @@ The data-source swap is implemented in `packages/ui/src/api/`:
   stream yet).
 - `useLoopSource.ts` — polls the index every 10 s and the selected loop every
   2.5 s while it is live; falls back to the mock recording when the API is
-  empty or unreachable (a `mock data` chip appears in the top bar).
+  empty or unreachable.
 
 Rubric-sidebar edits POST real `comment → rubric mutation` requests when
 viewing a live loop; set `VITE_LOOPER_API_TOKEN` so writes are authorized.
