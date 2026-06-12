@@ -1,6 +1,6 @@
 # Cursor Escalate
 
-Cursor Escalate saves money by trying cheap coding models first and escalating only when progress stalls. You give it a goal, it creates a frozen rubric, then runs a scored loop across a model ladder from cheap and fast to strong and expensive. Every run is saved as one replayable artifact with the goal, rubric, diffs, scores, model transitions, and comments.
+Cursor Escalate runs coding tasks through a cost-aware model ladder. It starts with a cheap model, measures progress against a frozen rubric, and escalates to a stronger model only when the cheaper one stops making progress. Every run is saved as a replayable artifact with the goal, rubric, diffs, scores, model transitions, and comments.
 
 > The CLI binary is currently `cursor-looper` (rename pending). Commands below use the real binary name.
 
@@ -10,27 +10,27 @@ Cursor Escalate saves money by trying cheap coding models first and escalating o
 cursor-looper "/goal implement rate limiting"
 ```
 
-Cursor Escalate will:
+For that goal, Cursor Escalate will:
 
-- generate acceptance criteria for the goal
+- generate concrete acceptance criteria
 - let the cheapest model attempt the work first
 - score each attempt against the same rubric
 - escalate only if the score stops improving or a critical check keeps failing
-- save the full loop so you can inspect or rerun it later
+- save the full loop for inspection and reruns
 
 ## Loop
 
-1. **Goal.** You provide a one-line coding goal.
-2. **Rubric.** The strongest model reads the repo once and writes the grading criteria.
-3. **Attempt.** The cheapest model makes the first code change.
-4. **Score.** The diff is graded against the frozen rubric.
-5. **Continue.** If the score improves, the same model keeps going.
+1. **Goal.** You provide a one-line coding task.
+2. **Rubric.** The strongest model reads the repo and writes the grading criteria.
+3. **Attempt.** The cheapest model tries the task first.
+4. **Score.** The resulting diff is graded against the frozen rubric.
+5. **Continue.** If the score improves, the same model gets another attempt.
 6. **Escalate.** If progress stalls, the loop moves to the next model tier.
-7. **Replay.** The full trajectory is persisted as a JSON artifact.
+7. **Replay.** The full trajectory is saved as a JSON artifact.
 
 ## Rubric
 
-The rubric is a frozen set of pass/fail criteria. Most goals produce 5-10 checks. Some criteria run commands. Others are judged by an LLM reading the diff.
+The rubric is a frozen set of pass/fail criteria. Most goals produce 5-10 checks. Some checks run commands. Others are judged by an LLM reading the diff.
 
 Example criteria for rate limiting:
 
@@ -41,7 +41,7 @@ PASS if rate-limited requests are rejected before expensive work runs.
 PASS if the limiter cannot be bypassed by unauthenticated requests.
 ```
 
-The same rubric scores every model attempt, so escalation is based on measured progress instead of vibes.
+The same rubric scores every model attempt, so escalation is based on measured progress rather than a guess.
 
 ## Escalation
 
@@ -64,9 +64,9 @@ The Cursor wrapper resolves model ids against `Cursor.models.list()` and fails w
 
 ## Comments
 
-Pinned comments become grading criteria.
+Pinned comments can become grading criteria.
 
-If you pin a comment on a rubric or iteration node, Cursor Escalate asks a strong model to convert it into a criterion add, patch, or calibration example. The artifact records both the comment and the resulting rubric mutation, so future reruns can reuse what you taught it.
+If you pin a comment on a rubric or iteration node, Cursor Escalate asks a strong model to convert it into a new criterion, a criterion patch, or a calibration example. The artifact records both the comment and the rubric change, so future reruns can reuse what you taught it.
 
 Example:
 
@@ -77,9 +77,9 @@ New criterion: "PASS if rate-limited requests return before any database query."
 
 ## UI
 
-The UI replays saved loop artifacts. Each iteration is a node with its model, score, diff, and criterion results.
+The UI replays saved loop artifacts. Each iteration appears as a node with its model, score, diff, and criterion results.
 
-Use it to answer:
+Use it to see:
 
 - which model worked on each step
 - where the score improved or stalled
@@ -116,7 +116,7 @@ Loop flags:
 
 Artifacts are written to `~/.cursor-looper/loops/<loop_id>.json`. Set `LOOPER_STORE_DIR` to override this in tests.
 
-> `cancel` persists cancellation to the artifact so readers see it immediately, but it does not yet kill an in-flight Cursor SDK process across processes. Core must cooperate to stop a running agent early.
+> `cancel` persists cancellation to the artifact so readers see it immediately. It does not yet kill an in-flight Cursor SDK process across processes; core must cooperate to stop a running agent early.
 
 ## Setup
 
@@ -179,7 +179,7 @@ Bearer auth uses `Authorization: Bearer $LOOPER_API_TOKEN`. Vercel env vars: `BL
 cursor-looper "/goal make the failing test in examples/smoke-task pass" --ladder grok-build-0.1
 ```
 
-The real SDK e2e test is skipped unless `CURSOR_API_KEY` is set. When enabled, it runs from `examples/smoke-task`, forces a single cheap model, and asserts the loop passes, at least one iteration exists, the diff is non-empty, and the rubric came from an agent call.
+The real SDK e2e test is skipped unless `CURSOR_API_KEY` is set. When enabled, it runs from `examples/smoke-task`, forces a single cheap model, and asserts that the loop passes, at least one iteration exists, the diff is non-empty, and the rubric came from an agent call.
 
 ## Demo
 
@@ -190,4 +190,4 @@ The real SDK e2e test is skipped unless `CURSOR_API_KEY` is set. When enabled, i
 5. Show the escalation to the next model tier.
 6. Open an iteration node and inspect its diff and failed criteria.
 7. Pin a comment and show it becoming a new criterion.
-8. Rerun or inspect the artifact to prove the loop is durable.
+8. Rerun or inspect the artifact to show that the loop is durable.
