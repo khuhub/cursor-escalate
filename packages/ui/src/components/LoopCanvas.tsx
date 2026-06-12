@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import type { LoopArtifact, LoopEvent, ModelInfo } from "../types";
 import type { NodeState, ReplayState } from "../replay/useReplay";
 import { fmtClock } from "../replay/useReplay";
-import { STEP_GLYPH } from "./icons";
+import { AlertIcon, FailIcon, StepIcon } from "./icons";
 
 export type NodeSelection = { type: "rubric" } | { type: "iteration"; index: number } | null;
 
@@ -59,7 +59,7 @@ function Cascade({ node }: { node: NodeState }) {
           key={s.at}
           className={`step k-${s.kind}${live && i === node.visibleSteps.length - 1 ? " latest" : ""}`}
         >
-          <span className={`icon k-${s.kind}`}>{STEP_GLYPH[s.kind]}</span>
+          <span className={`icon k-${s.kind}`}><StepIcon kind={s.kind} /></span>
           <span className="txt">{s.summary}</span>
         </div>
       ))}
@@ -123,7 +123,7 @@ function HoverCard({
             const c = artifact.rubric.criteria.find((c) => c.id === r.criterion_id);
             return (
               <div className="crit-line" key={r.criterion_id}>
-                <span className="mark fail">✗</span>
+                <span className="mark fail"><FailIcon /></span>
                 <span>{c?.statement ?? r.criterion_id}</span>
               </div>
             );
@@ -202,7 +202,7 @@ function IterationNode({
                 <span
                   key={r.criterion_id}
                   className={`crit-dot ${r.passed ? "pass" : "fail"}`}
-                  title={`${r.passed ? "✓" : "✗"} ${c?.statement ?? r.criterion_id}`}
+                  title={`${r.passed ? "passed" : "failed"}: ${c?.statement ?? r.criterion_id}`}
                 />
               );
             })}
@@ -250,7 +250,7 @@ function RubricNode({
       <div className="cascade">
         {replay.rubricVisibleSteps.map((s) => (
           <div key={s.at} className={`step k-${s.kind}`}>
-            <span className={`icon k-${s.kind}`}>{STEP_GLYPH[s.kind]}</span>
+            <span className={`icon k-${s.kind}`}><StepIcon kind={s.kind} /></span>
             <span className="txt">{s.summary}</span>
           </div>
         ))}
@@ -285,7 +285,7 @@ function Connector({ escalation }: { escalation?: Extract<LoopEvent, { kind: "es
     <div className="connector escalation">
       <div className="line" />
       <div className="esc-badge">
-        <span>▲ ESCALATED</span>
+        <span className="esc-title"><AlertIcon /> ESCALATED</span>
         <span className="reason">{escalation.reason.replace("_", " ")}</span>
       </div>
     </div>
@@ -315,11 +315,8 @@ export function LoopCanvas({ artifact, replay, selection, onSelect }: CanvasProp
           selected={selection?.type === "rubric"}
           onSelect={() => onSelect(selection?.type === "rubric" ? null : { type: "rubric" })}
         />
-        {replay.nodes.map((node) => {
-          const prevEnd =
-            node.iteration.index === 1
-              ? 0
-              : artifact.iterations[node.iteration.index - 2].finished_at;
+        {replay.nodes.map((node, nodeIndex) => {
+          const prevEnd = nodeIndex === 0 ? 0 : replay.nodes[nodeIndex - 1].iteration.finished_at;
           const esc = escalations.find((e) => e.at > prevEnd && e.at < node.iteration.started_at);
           return (
             <div key={node.iteration.index} style={{ display: "contents" }}>

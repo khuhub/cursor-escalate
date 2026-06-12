@@ -7,6 +7,7 @@ import { DetailPanel } from "./components/DetailPanel";
 import { RubricSidebar } from "./components/RubricSidebar";
 import { ReplayBar } from "./components/ReplayBar";
 import { ModelSelect } from "./components/ModelSelect";
+import { BrandIcon, EditIcon } from "./components/icons";
 
 type SidePanel = { kind: "detail"; selection: Exclude<NodeSelection, null> } | { kind: "rubric-edit" } | null;
 
@@ -27,7 +28,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="brand">escalate</span>
+        <span className="brand"><BrandIcon /> Escalate</span>
         <span className="goal">
           $ <b>{artifact.goal_prompt}</b>
         </span>
@@ -69,7 +70,7 @@ export default function App() {
           className={`btn${panel?.kind === "rubric-edit" ? " active" : ""}`}
           onClick={() => setPanel(panel?.kind === "rubric-edit" ? null : { kind: "rubric-edit" })}
         >
-          ✎ Edit rubric
+          <EditIcon /> Edit rubric
         </button>
       </header>
 

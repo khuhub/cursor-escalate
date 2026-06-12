@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Criterion, CriterionWeight, LoopArtifact } from "../types";
 import { postComment } from "../api/client";
+import { CloseIcon } from "./icons";
 
 interface Props {
   artifact: LoopArtifact;
@@ -105,7 +106,7 @@ export function RubricSidebar({ artifact, live = false, onClose }: Props) {
           <div className="title">Edit rubric</div>
           <div className="sub">{artifact.rubric.criteria.length} frozen criteria · {queued.length} mutation{queued.length === 1 ? "" : "s"} queued</div>
         </div>
-        <button className="close-x" onClick={onClose}>✕</button>
+        <button className="close-x" onClick={onClose} title="Close"><CloseIcon /></button>
       </div>
       <div className="sidebar-body">
         <div className="mutation-note">
