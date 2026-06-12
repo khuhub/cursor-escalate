@@ -5,9 +5,9 @@ import {
   type CriterionResult,
   type Iteration,
   type LoopArtifact
-} from "@looper/core";
+} from "../../core/src/schema";
 import { z } from "zod";
-import { getStorage } from "./db.js";
+import { getStorage } from "./db";
 
 export type LoopIndexEntry = {
   id: string;

@@ -1,4 +1,4 @@
-import type { LoopArtifact } from "@looper/core";
+import type { LoopArtifact } from "../../core/src/schema";
 import { beforeEach, describe, expect, it } from "vitest";
 import { setStorageAdapter, type JsonStorage } from "../lib/db.js";
 import {
