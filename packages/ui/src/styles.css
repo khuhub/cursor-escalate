@@ -313,11 +313,12 @@ body {
 
 .canvas {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0;
-  padding: 36px 48px 60px;
+  padding: 0 48px;
   min-height: 100%;
   width: max-content;
+  box-sizing: border-box;
 }
 
 /* ---------- nodes ---------- */
