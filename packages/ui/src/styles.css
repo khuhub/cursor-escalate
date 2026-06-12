@@ -515,8 +515,8 @@ body {
   width: 56px;
   flex-shrink: 0;
   position: relative;
-  height: 47px; /* aligns with node head center */
-  align-self: flex-start;
+  align-self: stretch;
+  min-height: 47px;
 }
 .connector .line {
   position: absolute;
