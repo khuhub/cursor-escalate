@@ -31,6 +31,7 @@
   --text: #e4e4e4;
   --muted: #9b9b9b;
   --faint: #6e6e6e;
+  --cascade-text: #b8b8b8;
   --accent: #f54e00;
   --accent-soft: rgba(245, 78, 0, 0.14);
   --green: #4ade80;
@@ -354,6 +355,17 @@ body {
   gap: 2px;
   max-height: 240px;
   overflow-y: auto;
+  background: var(--panel-2);
+}
+.cascade .step .txt {
+  color: var(--cascade-text);
+}
+.cascade .step.k-assistant .txt,
+.cascade .step.latest .txt {
+  color: var(--cascade-text);
+}
+.cascade .step.k-grading .txt {
+  color: var(--cascade-text);
 }
 .step {
   display: flex;
