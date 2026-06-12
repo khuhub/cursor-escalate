@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/types.ts","./src/components/DetailPanel.tsx","./src/components/LoopCanvas.tsx","./src/components/ReplayBar.tsx","./src/components/RubricSidebar.tsx","./src/components/ScoreStrip.tsx","./src/components/icons.tsx","./src/mock/loop.ts","./src/replay/useReplay.ts"],"version":"5.9.3"}
