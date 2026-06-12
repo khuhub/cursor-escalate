@@ -209,7 +209,8 @@ export async function runLoop(config: LoopConfig, dependencies: LoopEngineDepend
     await persist(artifact, dependencies, now);
   }
 
-  if (artifact.status === "running" || artifact.status === "awaiting_iteration") {
+  const finalStatus = artifact.status as LoopArtifact["status"];
+  if (finalStatus === "running" || finalStatus === "awaiting_iteration") {
     artifact.status = "exhausted";
     pushEvent(artifact, { kind: "loop_finished", at: iso(now), outcome: "exhausted" }, dependencies);
     await persist(artifact, dependencies, now);

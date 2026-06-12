@@ -7,8 +7,14 @@ import {
   resolveModelLadder,
   startLoop,
   type Iteration,
-  type LoopArtifact
+  type LoopArtifact,
+  type LoopEvent
 } from "@looper/core";
+
+declare const process: {
+  argv: string[];
+  exitCode?: number;
+};
 
 export type CliCommand =
   | {
@@ -102,11 +108,9 @@ export async function runCli(argv = process.argv.slice(2), io = console) {
       perTierCap: command.perTierCap,
       ladder: command.ladder,
       threshold: command.threshold,
-      onEvent(event) {
-        if (event.kind === "iteration_start") {
-          io.log(`iteration ${event.index} start model=${event.model_id} tier=${event.tier}`);
-        }
-        if (event.kind === "score") io.log(renderScoreLine(event.iteration));
+      onEvent(event: LoopEvent) {
+        if (event.kind === "iteration") io.log(`iteration ${event.iteration_index} complete`);
+        if (event.kind === "escalation") io.log(`escalating ${event.from_model} -> ${event.to_model}: ${event.reason}`);
       }
     });
     io.log(`loop ${artifact.loop_id} ${artifact.status} ${progressBar(artifact.progress)}`);
@@ -131,8 +135,8 @@ export async function runCli(argv = process.argv.slice(2), io = console) {
     return;
   }
   if (command.kind === "ladder") {
-    const ladder = await resolveModelLadder(command.ladder);
-    io.log(ladder.map((model) => `${model.tier}: ${model.id} available=${model.available}`).join("\n"));
+    const ladder = await resolveModelLadder(command.ladder ?? parseLadder());
+    io.log(ladder.map((model, index) => `${index}: ${model.id}${model.displayName ? ` (${model.displayName})` : ""}`).join("\n"));
   }
 }
 

@@ -1,5 +1,12 @@
-import { Agent, Cursor, type ModelSelection } from "@cursor/sdk";
+import { Agent, Cursor, type ModelSelection, type SDKMessage, type SDKModel } from "@cursor/sdk";
 import type { Criterion, CriterionResult, Rubric } from "./schema.js";
+
+export const DEFAULT_MODEL_LADDER = [
+  "grok-build-0.1",
+  "composer-2.5",
+  "sonnet-4.6",
+  "gpt-5.5"
+] as const;
 
 export type CursorRunStatus = "finished" | "error" | "cancelled";
 
@@ -38,7 +45,7 @@ export type CursorRuntime =
   | { mode: "local"; cwd: string }
   | { mode: "cloud"; repoUrl: string; startingRef?: string };
 
-export type CursorStreamEvent = Record<string, unknown>;
+export type CursorStreamEvent = SDKMessage;
 
 export interface CursorPromptOptions {
   apiKey?: string;
@@ -55,17 +62,14 @@ export interface CursorPromptResult {
   durationMs?: number;
 }
 
-export interface AvailableCursorModel {
-  id: string;
-  displayName?: string;
-  name?: string;
-}
+export type AvailableCursorModel = SDKModel;
 
 export interface ResolvedModel {
   requested: string;
   id: string;
   selection: ModelSelection;
   displayName?: string;
+  reasoningNote?: string;
 }
 
 export class ModelResolutionError extends Error {
@@ -95,20 +99,24 @@ export function resolveModelLadderFromModels(
   requestedIds: readonly string[],
   availableModels: readonly AvailableCursorModel[]
 ): ResolvedModel[] {
+  const choices = availableModels.flatMap(modelChoices);
   const unresolved: string[] = [];
   const resolved = requestedIds.flatMap((requested) => {
-    const exact = availableModels.find((model) => model.id === requested);
-    const model = exact ?? availableModels.find((candidate) => normalizeModelName(candidate.displayName ?? candidate.name ?? candidate.id).includes(normalizeModelName(requested)));
-    if (!model) {
+    const choice = findModelChoice(requested, choices);
+    if (!choice) {
       unresolved.push(requested);
       return [];
     }
     return [
       {
         requested,
-        id: model.id,
-        selection: { id: model.id },
-        displayName: model.displayName ?? model.name
+        id: choice.model.id,
+        selection: applyReasoningEffort(requested, choice.selection, choice.model),
+        displayName: choice.displayName,
+        reasoningNote:
+          requested === "gpt-5.5"
+            ? "Requested GPT-5.5 low reasoning; applied via model params when exposed by Cursor.models.list()."
+            : undefined
       }
     ];
   });
@@ -120,8 +128,11 @@ export function resolveModelLadderFromModels(
   return resolved;
 }
 
-export async function resolveModelLadder(requestedIds: readonly string[]): Promise<ResolvedModel[]> {
-  const models = await Cursor.models.list();
+export async function resolveModelLadder(
+  requestedIds: readonly string[] = DEFAULT_MODEL_LADDER,
+  apiKey?: string
+): Promise<ResolvedModel[]> {
+  const models = await Cursor.models.list({ apiKey });
   return resolveModelLadderFromModels(requestedIds, normalizeModelList(models));
 }
 
@@ -191,7 +202,7 @@ async function runCursorPromptOnce(options: CursorPromptOptions): Promise<Cursor
   try {
     const run = await agent.send(options.prompt);
     for await (const event of run.stream()) {
-      options.onEvent?.(event as CursorStreamEvent);
+      options.onEvent?.(event);
     }
     const result = await run.wait();
     return {
@@ -206,7 +217,7 @@ async function runCursorPromptOnce(options: CursorPromptOptions): Promise<Cursor
 
 function runtimeOptions(runtime: CursorRuntime): Record<string, unknown> {
   if (runtime.mode === "local") {
-    return { local: { cwd: runtime.cwd } };
+    return { local: { cwd: runtime.cwd, settingSources: ["project"] } };
   }
   return {
     cloud: {
@@ -268,18 +279,81 @@ function normalizeModelList(models: unknown): AvailableCursorModel[] {
     if (!isRecord(model) || typeof model.id !== "string") {
       return [];
     }
-    return [
-      {
-        id: model.id,
-        displayName: typeof model.displayName === "string" ? model.displayName : undefined,
-        name: typeof model.name === "string" ? model.name : undefined
-      }
-    ];
+    return [model as unknown as AvailableCursorModel];
   });
 }
 
 function normalizeModelName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function modelChoices(model: AvailableCursorModel): Array<{
+  model: AvailableCursorModel;
+  selection: ModelSelection;
+  displayName: string;
+}> {
+  const baseName = model.displayName;
+  const base = { model, selection: { id: model.id }, displayName: baseName };
+  if (!model.variants || model.variants.length === 0) {
+    return [base];
+  }
+
+  return [
+    base,
+    ...model.variants.map((variant) => ({
+      model,
+      selection: { id: model.id, params: variant.params },
+      displayName:
+        normalizeModelName(variant.displayName) === normalizeModelName(baseName)
+          ? baseName
+          : `${baseName} ${variant.displayName}`
+    }))
+  ];
+}
+
+function findModelChoice(
+  requested: string,
+  choices: readonly ReturnType<typeof modelChoices>[number][]
+): ReturnType<typeof modelChoices>[number] | undefined {
+  const normalizedRequested = normalizeModelName(requested);
+  return (
+    choices.find((choice) => choice.model.id === requested) ??
+    choices.find((choice) => normalizeModelName(choice.model.id) === normalizedRequested) ??
+    choices.find((choice) => normalizeModelName(choice.displayName) === normalizedRequested) ??
+    choices.find(
+      (choice) =>
+        normalizeModelName(choice.model.id).includes(normalizedRequested) ||
+        normalizeModelName(choice.displayName).includes(normalizedRequested)
+    )
+  );
+}
+
+function applyReasoningEffort(
+  requested: string,
+  selection: ModelSelection,
+  model: AvailableCursorModel
+): ModelSelection {
+  if (requested !== "gpt-5.5") {
+    return selection;
+  }
+
+  const parameter = model.parameters?.find((candidate) =>
+    normalizeModelName(candidate.id + (candidate.displayName ?? "")).includes("reasoning")
+  );
+  const low = parameter?.values.find((value) =>
+    normalizeModelName(value.value + (value.displayName ?? "")).includes("low")
+  );
+  if (!parameter || !low) {
+    return selection;
+  }
+
+  return {
+    ...selection,
+    params: [
+      ...(selection.params ?? []).filter((param) => param.id !== parameter.id),
+      { id: parameter.id, value: low.value }
+    ]
+  };
 }
 
 function buildJudgePrompt(diff: string, criteria: readonly Criterion[]): string {

@@ -11,7 +11,7 @@ export const CriterionSchema = z
     check: z.enum(["deterministic", "judged"]),
     command: z.string().min(1).optional(),
     judge_hint: z.string().min(1).optional(),
-    source: z.enum(["generated", "comment"]),
+    source: z.enum(["generated", "comment"]).default("generated"),
     calibration_examples: z
       .array(
         z.object({
