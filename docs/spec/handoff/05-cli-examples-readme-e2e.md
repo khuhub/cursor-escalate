@@ -108,15 +108,15 @@ Document:
 Run:
 
 ```bash
-npm run build --workspace @looper/cli
-npm test --workspace @looper/cli
+pnpm --filter @looper/cli build
+pnpm --filter @looper/cli test
 ```
 
 If full workspace is merged locally, also run:
 
 ```bash
-npm run build
-npm test
+pnpm build
+pnpm test
 ```
 
 Required tests:
@@ -133,5 +133,5 @@ You are in the cursor-escalator repo on a worktree branched from looper/foundati
 
 Own packages/cli, examples/smoke-task, README, and CLI/e2e tests. Make the CLI a thin layer over @looper/core exports. Do not duplicate core loop/scoring/Cursor behavior and do not implement API routes.
 
-Use apply_patch for edits. After coding, run npm run build --workspace @looper/cli and npm test --workspace @looper/cli. If the full workspace is available, also run npm run build and npm test. Summarize changed files, verification, and any core API assumptions you had to make.
+Use apply_patch for edits. After coding, run pnpm --filter @looper/cli build and pnpm --filter @looper/cli test. If the full workspace is available, also run pnpm build and pnpm test. Summarize changed files, verification, and any core API assumptions you had to make.
 ```

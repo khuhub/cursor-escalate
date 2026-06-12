@@ -102,8 +102,8 @@ Escalate when any trigger occurs:
 Run:
 
 ```bash
-npm run build
-npm test --workspace @looper/core
+pnpm build
+pnpm --filter @looper/core test
 ```
 
 Required tests:
@@ -126,5 +126,5 @@ You are in the cursor-escalator repo on a worktree branched from looper/foundati
 
 Own only @looper/core deterministic runtime files: store.ts, git.ts, scorer.ts, escalation.ts, loop.ts, exports, and their tests. Use the Cursor wrapper as an injected/mockable dependency. Do not implement real Cursor SDK calls, rubric prompt handling, comment mutation SDK calls, API routes, or CLI UX.
 
-Before coding, read the source spec and this handoff fully. Use apply_patch for edits. Preserve existing user changes. After coding, run npm run build and npm test --workspace @looper/core. Summarize changed files, verification, and any interface assumptions needed by other streams.
+Before coding, read the source spec and this handoff fully. Use apply_patch for edits. Preserve existing user changes. After coding, run pnpm build and pnpm --filter @looper/core test. Summarize changed files, verification, and any interface assumptions needed by other streams.
 ```

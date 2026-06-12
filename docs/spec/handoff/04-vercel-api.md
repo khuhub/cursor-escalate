@@ -88,8 +88,8 @@ Implement all routes as JSON:
 Run:
 
 ```bash
-npm run build --workspace @looper/api
-npm test --workspace @looper/api
+pnpm --filter @looper/api build
+pnpm --filter @looper/api test
 ```
 
 Required API tests:
@@ -110,5 +110,5 @@ You are in the cursor-escalator repo on a worktree branched from looper/foundati
 
 Own packages/api and Vercel API behavior only. Use the core zod schemas for artifact validation. Build a mockable Vercel Blob storage adapter. Do not build a UI beyond the minimal index page listing loop JSON links. Do not modify core loop/Cursor/scoring behavior or CLI implementation.
 
-Use apply_patch for edits. After coding, run npm run build --workspace @looper/api and npm test --workspace @looper/api. Summarize changed files, verification, route behavior, and any assumptions about the core schema exports.
+Use apply_patch for edits. After coding, run pnpm --filter @looper/api build and pnpm --filter @looper/api test. Summarize changed files, verification, route behavior, and any assumptions about the core schema exports.
 ```

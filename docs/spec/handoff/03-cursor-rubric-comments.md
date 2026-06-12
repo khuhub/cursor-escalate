@@ -118,8 +118,8 @@ The SDK is beta. Trust the cookbook source over the handoff if API shapes differ
 Run:
 
 ```bash
-npm run build
-npm test --workspace @looper/core
+pnpm build
+pnpm --filter @looper/core test
 ```
 
 Required tests use a mocked `@cursor/sdk`:
@@ -143,5 +143,5 @@ You are in the cursor-escalator repo on a worktree branched from looper/foundati
 
 First read the Cursor SDK docs and cookbook listed in the source spec, because @cursor/sdk is beta. Then implement only the Cursor-backed core modules: cursor.ts, rubric.ts, comments.ts, and their mocked tests. All agent/model/rubric/judging/comment mutation calls must go through @cursor/sdk. Do not call provider APIs directly and do not shell out to cursor agent.
 
-Keep the API, CLI, store, git, scorer, escalation, and loop-engine implementation out of scope unless a tiny interface adjustment is required. Use apply_patch for edits. After coding, run npm run build and npm test --workspace @looper/core. Summarize changed files, verification, SDK API assumptions, and any docs/cookbook conflicts you resolved.
+Keep the API, CLI, store, git, scorer, escalation, and loop-engine implementation out of scope unless a tiny interface adjustment is required. Use apply_patch for edits. After coding, run pnpm build and pnpm --filter @looper/core test. Summarize changed files, verification, SDK API assumptions, and any docs/cookbook conflicts you resolved.
 ```

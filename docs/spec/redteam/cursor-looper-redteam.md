@@ -169,8 +169,8 @@ Agents interleave thinking, tool calls, and prose; the JSON may not be the final
 ### R37 — Missing validations at freeze time (S2)
 §5.1 validates count, ≥2 penalty, weight enum, command/judge_hint presence. It does **not** validate: ≥1 reward (R5), unique ids, `0 < pass_threshold ≤ 1`, feasibility (R7), or that `command` is on the allowlist (R1). Add these to the freeze-time invariant set with a repair turn.
 
-### R38 — The verbatim prompt primes `pnpm` while the smoke task uses `npm` (S3)
-The §9 example criteria use `pnpm test`/`pnpm lint`; the smoke task (§10.7) is an `npm test` project. "Never invent a command not in the repo" should catch it, but the few-shot biases the model toward pnpm. Make the example package-manager-neutral or detected.
+### R38 — Package-manager commands need one canonical default (S3)
+Resolved in the handoff docs by making `pnpm` canonical across the repo, including the smoke task and verification commands. Agents should still detect and use target-repo commands when looping over an external project.
 
 ---
 

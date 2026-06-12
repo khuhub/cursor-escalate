@@ -90,9 +90,9 @@ The real SDK e2e test is skipped unless `CURSOR_API_KEY` exists. When enabled, i
 ## Development
 
 ```bash
-npm install
-npm run build --workspace @looper/cli
-npm test --workspace @looper/cli
-npm run build
-npm test
+pnpm install
+pnpm --filter @looper/cli build
+pnpm --filter @looper/cli test
+pnpm build
+pnpm test
 ```

@@ -4,6 +4,8 @@ Source spec: [cursor-looper-handoff.md](../cursor-looper-handoff.md)
 
 This plan splits `cursor-looper` into one short foundation stream and four implementation streams that can run in parallel after the foundation branch exists. The final stream is an integrator pass that resolves merge conflicts, runs the whole suite, and opens the PR.
 
+Package manager policy: `pnpm` is canonical for this repo. Use `pnpm-lock.yaml` and `pnpm-workspace.yaml`; do not add `package-lock.json`, `yarn.lock`, or ad hoc `npm`/`yarn` commands in docs, scripts, or handoffs.
+
 ## Branch and Worktree Plan
 
 Use separate worktrees so each agent has its own checkout:
@@ -68,8 +70,8 @@ Reasoning: core establishes runtime behavior, Cursor stream fills the model-back
 
 The combined PR is done only when:
 
-- `npm run build` passes across all workspaces.
-- `npm test` passes across all workspaces.
+- `pnpm build` passes across all workspaces.
+- `pnpm test` passes across all workspaces.
 - Cursor SDK real e2e is skipped without `CURSOR_API_KEY` and runnable when the key exists.
 - API tests use mocked Vercel Blob and prove write auth, comments, trajectory, iteration detail, and diff endpoints.
 - README documents setup, CLI commands, API routes, escalation, and comment mutation behavior.

@@ -44,7 +44,7 @@ Resolve conflicts after each merge before starting the next one.
 - Do not introduce direct provider SDK calls or `cursor agent` CLI calls.
 - Do not add UI beyond the trivial index page.
 - Prefer package-local dependency additions over root dependency bloat, unless a tool is used by multiple workspaces.
-- If `package-lock.json` conflicts, resolve source files first, then regenerate the lockfile with `npm install`.
+- `pnpm` is canonical. Resolve package manifest conflicts first, then regenerate `pnpm-lock.yaml` with `pnpm install`. Do not keep or create `package-lock.json` or `yarn.lock`.
 
 ## Integration Fix Checklist
 
@@ -57,7 +57,8 @@ Resolve conflicts after each merge before starting the next one.
 
 2. Resolve shared files first:
    - `package.json`
-   - `package-lock.json`
+   - `pnpm-lock.yaml`
+   - `pnpm-workspace.yaml`
    - `tsconfig.base.json`
    - package manifests
    - `packages/core/src/index.ts`
@@ -73,17 +74,17 @@ Resolve conflicts after each merge before starting the next one.
 5. Run full verification:
 
    ```bash
-   npm install
-   npm run build
-   npm test
+   pnpm install
+   pnpm build
+   pnpm test
    ```
 
 6. Run targeted checks when failures identify a package:
 
    ```bash
-   npm test --workspace @looper/core
-   npm test --workspace @looper/api
-   npm test --workspace @looper/cli
+   pnpm --filter @looper/core test
+   pnpm --filter @looper/api test
+   pnpm --filter @looper/cli test
    ```
 
 7. Search for forbidden implementation choices:
@@ -105,7 +106,7 @@ Resolve conflicts after each merge before starting the next one.
 9. Confirm e2e skip behavior without credentials:
 
    ```bash
-   env -u CURSOR_API_KEY npm test
+   env -u CURSOR_API_KEY pnpm test
    ```
 
 10. If credentials are available, run the real smoke e2e per README.
@@ -127,9 +128,9 @@ PR body:
 - Documents setup, CLI commands, API routes, deployment env vars, and e2e behavior.
 
 ## Testing
-- [ ] npm run build
-- [ ] npm test
-- [ ] env -u CURSOR_API_KEY npm test
+- [ ] pnpm build
+- [ ] pnpm test
+- [ ] env -u CURSOR_API_KEY pnpm test
 - [ ] Real Cursor SDK smoke e2e, if CURSOR_API_KEY is available
 - [ ] Vercel deploy/dry run for packages/api, if credentials are available
 
@@ -145,9 +146,9 @@ You are in the cursor-escalator repo. Integrate the cursor-looper workstreams an
 
 Create looper/integration from main. Merge these branches in order, resolving conflicts after each merge: looper/foundation, looper/core-engine, looper/cursor-rubric-comments, looper/api, looper/cli-docs-e2e.
 
-Conflict policy: source spec wins, preserve strict typing and zod artifact compatibility, keep tests unless duplicates, no direct provider APIs, no cursor agent CLI shellout, no real UI beyond the minimal index page. If package-lock conflicts, resolve source/package manifests first and regenerate with npm install.
+Conflict policy: source spec wins, preserve strict typing and zod artifact compatibility, keep tests unless duplicates, no direct provider APIs, no cursor agent CLI shellout, no real UI beyond the minimal index page. pnpm is canonical: if dependency conflicts arise, resolve source/package manifests first and regenerate pnpm-lock.yaml with pnpm install. Do not create package-lock.json or yarn.lock.
 
-After merging, run npm install, npm run build, npm test, env -u CURSOR_API_KEY npm test, and package-targeted tests for any failures. Search product code for forbidden provider/API usage. Fix integration breaks rather than dropping behavior. If external credentials are unavailable, clearly note which deploy/e2e checks were skipped.
+After merging, run pnpm install, pnpm build, pnpm test, env -u CURSOR_API_KEY pnpm test, and package-targeted tests for any failures. Search product code for forbidden provider/API usage. Fix integration breaks rather than dropping behavior. If external credentials are unavailable, clearly note which deploy/e2e checks were skipped.
 
 Commit the integrated result, push the branch, and create a draft PR titled "Implement cursor-looper monorepo" using the PR body template in docs/spec/handoff/99-integration-merge-pr.md. Summarize conflicts resolved, verification results, skipped checks, and PR URL.
 ```

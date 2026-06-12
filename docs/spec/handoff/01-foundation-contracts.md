@@ -11,7 +11,8 @@ Create the monorepo scaffold and shared contracts that every other stream can bu
 ## Owned Paths
 
 - `package.json`
-- `package-lock.json` if npm creates one
+- `pnpm-lock.yaml`
+- `pnpm-workspace.yaml`
 - `tsconfig.base.json`
 - `vitest.config.ts`
 - `.env.example`
@@ -33,11 +34,11 @@ Avoid implementing real loop, Cursor SDK, API routes, or CLI behavior in this st
 
 ## Implementation Requirements
 
-- Use npm workspaces and TypeScript ESM everywhere.
+- Use pnpm workspaces and TypeScript ESM everywhere.
 - Use Node 22 assumptions from the source spec.
 - Configure strict TypeScript. `packages/core` must avoid `any`.
-- Add Vitest and a root `npm test` that runs workspace tests.
-- Add `npm run build` that typechecks/builds all workspaces.
+- Add Vitest and a root `pnpm test` that runs workspace tests.
+- Add `pnpm build` that typechecks/builds all workspaces.
 - Implement zod schemas and exported TypeScript types for every data shape in section 4 of the source spec:
   - `Criterion`
   - `Rubric`
@@ -65,9 +66,9 @@ Avoid implementing real loop, Cursor SDK, API routes, or CLI behavior in this st
 Run:
 
 ```bash
-npm install
-npm run build
-npm test
+pnpm install
+pnpm build
+pnpm test
 ```
 
 Expected result: all pass, with placeholder CLI/API packages compiling.
@@ -83,5 +84,5 @@ You are in the cursor-escalator repo. Implement Workstream 01 from docs/spec/han
 
 Create the monorepo scaffold, strict TypeScript/Vitest setup, zod schemas, exported types, and schema round-trip tests only. Keep implementation placeholders minimal so later agents can work in parallel. Do not implement the Cursor SDK wrapper, loop engine, API routes, CLI UX, or e2e flow.
 
-Before coding, read both handoff files fully. Use apply_patch for edits. After coding, run npm install if needed, then npm run build and npm test. Summarize changed files, verification, and any contract decisions.
+Before coding, read both handoff files fully. Use apply_patch for edits. After coding, run pnpm install if needed, then pnpm build and pnpm test. Summarize changed files, verification, and any contract decisions.
 ```
