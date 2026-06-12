@@ -37,18 +37,23 @@ export default function App() {
           </span>
         ) : (
           loops.length > 1 && (
-            <select
-              className="chip"
-              value={selectedId ?? ""}
-              onChange={(e) => select(e.target.value)}
-              title="Select loop"
-            >
-              {loops.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.id} · {l.status}
-                </option>
-              ))}
-            </select>
+            <label className="model-select" title="Select loop">
+              <span className="model-select-label">
+                {selectedId ?? "select loop"}
+                <span className="tier">{loops.find((l) => l.id === selectedId)?.status ?? ""}</span>
+              </span>
+              <select
+                className="model-select-native"
+                value={selectedId ?? ""}
+                onChange={(e) => select(e.target.value)}
+              >
+                {loops.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.id} · {l.status}
+                  </option>
+                ))}
+              </select>
+            </label>
           )
         )}
         <span className={`chip status-${statusClass}`}>
