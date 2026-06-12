@@ -130,6 +130,55 @@ body {
 .chip.model .cost { color: var(--green); font-family: var(--mono); font-size: 10px; }
 .chip.model .tier { color: var(--faint); font-weight: 500; }
 
+.model-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.model-select:hover,
+.model-select:focus-within {
+  border-color: var(--accent);
+  background: var(--panel-3);
+}
+.model-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 26px 4px 10px;
+  pointer-events: none;
+  font-family: var(--mono);
+}
+.model-select-label .cost { color: var(--green); font-size: 10px; }
+.model-select-label .tier { color: var(--faint); font-weight: 500; }
+.model-select-label::after {
+  content: "▾";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--faint);
+  font-size: 10px;
+}
+.model-select-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 .btn {
