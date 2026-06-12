@@ -31,30 +31,24 @@ export default function App() {
         <span className="goal">
           $ <b>{artifact.goal_prompt}</b>
         </span>
-        {source === "mock" ? (
-          <span className="chip" title="No live loops from the API — showing the demo recording">
-            mock data
-          </span>
-        ) : (
-          loops.length > 1 && (
-            <label className="model-select" title="Select loop">
-              <span className="model-select-label">
-                {selectedId ?? "select loop"}
-                <span className="tier">{loops.find((l) => l.id === selectedId)?.status ?? ""}</span>
-              </span>
-              <select
-                className="model-select-native"
-                value={selectedId ?? ""}
-                onChange={(e) => select(e.target.value)}
-              >
-                {loops.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.id} · {l.status}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )
+        {source !== "mock" && loops.length > 1 && (
+          <label className="model-select" title="Select loop">
+            <span className="model-select-label">
+              {selectedId ?? "select loop"}
+              <span className="tier">{loops.find((l) => l.id === selectedId)?.status ?? ""}</span>
+            </span>
+            <select
+              className="model-select-native"
+              value={selectedId ?? ""}
+              onChange={(e) => select(e.target.value)}
+            >
+              {loops.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.id} · {l.status}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         <span className={`chip status-${statusClass}`}>
           <span className="dot" /> {replay.statusLabel}
