@@ -140,23 +140,37 @@ export function toUiArtifact(api: ApiLoopArtifact, nowMs = Date.now()): LoopArti
   }
   events.sort((a, b) => a.at - b.at);
 
-  const rubricAt = ms(api.rubric.frozen_at);
-  const rubricSpan = Math.max(rubricAt, 3000);
-  const rubric_generation_steps: IterationStep[] = [
-    { at: Math.round(rubricSpan * 0.1), kind: "tool_call", summary: "exploring repo structure" },
-    { at: Math.round(rubricSpan * 0.45), kind: "thinking", summary: "drafting criteria from goal" },
-    { at: Math.round(rubricSpan * 0.8), kind: "assistant", summary: `froze ${api.rubric.criteria.length} criteria · pass ≥ ${api.rubric.pass_threshold}` },
-  ];
-
   const terminal = ["passed", "exhausted", "cancelled", "error"].includes(api.status);
   const lastOffset = Math.max(
     ms(api.updated_at),
     ...events.map((e) => e.at),
-    rubricAt,
     1000,
   );
   // a live loop keeps its right edge at "now" so the LIVE pin tracks wall clock
   const duration_ms = terminal ? lastOffset : Math.max(lastOffset, nowMs - base);
+
+  // While the rubric is still generating, the synced artifact carries a
+  // placeholder rubric with frozen_at == created_at. Pin the freeze just past
+  // the live edge so the UI shows "generating rubric" with a streaming rubric
+  // node instead of rendering the placeholder as frozen at t=0.
+  const generating = api.status === "generating_rubric";
+  const rubricAt = generating ? duration_ms + 1 : ms(api.rubric.frozen_at);
+  if (!events.some((e) => e.kind === "rubric_generated")) {
+    events.push({ kind: "rubric_generated", at: rubricAt, model_id: api.rubric.generated_by_model });
+    events.sort((a, b) => a.at - b.at);
+  }
+  const rubricSpan = Math.max(rubricAt, 3000);
+  const rubric_generation_steps: IterationStep[] = [
+    { at: Math.round(rubricSpan * 0.1), kind: "tool_call", summary: "exploring repo structure" },
+    { at: Math.round(rubricSpan * 0.45), kind: "thinking", summary: "drafting criteria from goal" },
+    {
+      at: Math.round(rubricSpan * 0.8),
+      kind: "assistant",
+      summary: generating
+        ? "drafting rubric…"
+        : `froze ${api.rubric.criteria.length} criteria · pass ≥ ${api.rubric.pass_threshold}`,
+    },
+  ];
 
   return {
     schema_version: 1,
