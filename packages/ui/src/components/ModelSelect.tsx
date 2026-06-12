@@ -1,15 +1,15 @@
 import type { LoopArtifact } from "../types";
 import type { ReplayControls, ReplayState } from "../replay/useReplay";
-import { firstIterationIndexForModel, seekTimeForModel } from "../replay/modelSeek";
+import { seekTimeForModel } from "../replay/modelSeek";
 
 interface Props {
   artifact: LoopArtifact;
   replay: ReplayState;
   controls: ReplayControls;
-  onJumpToIteration: (index: number) => void;
+  onSeek?: () => void;
 }
 
-export function ModelSelect({ artifact, replay, controls, onJumpToIteration }: Props) {
+export function ModelSelect({ artifact, replay, controls, onSeek }: Props) {
   const current = replay.currentModel;
 
   return (
@@ -30,8 +30,7 @@ export function ModelSelect({ artifact, replay, controls, onJumpToIteration }: P
           if (t === null) return;
           controls.pause();
           controls.seek(t);
-          const iterIndex = firstIterationIndexForModel(artifact, modelId);
-          if (iterIndex !== null) onJumpToIteration(iterIndex);
+          onSeek?.();
         }}
       >
         {artifact.model_ladder.map((model) => {

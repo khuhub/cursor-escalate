@@ -38,9 +38,7 @@ export default function App() {
           artifact={artifact}
           replay={replay}
           controls={controls}
-          onJumpToIteration={(index) => {
-            setPanel({ kind: "detail", selection: { type: "iteration", index } });
-          }}
+          onSeek={() => setPanel(null)}
         />
         <button
           className={`btn${panel?.kind === "rubric-edit" ? " active" : ""}`}
