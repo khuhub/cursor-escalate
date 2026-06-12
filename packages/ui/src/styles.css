@@ -481,11 +481,9 @@ body {
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-/* hover card */
+/* hover card — fixed under node via portal; must not affect canvas layout */
 .hovercard {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
+  position: fixed;
   transform: translateX(-50%);
   width: 252px;
   background: var(--panel-2);
@@ -493,9 +491,13 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 12px;
-  z-index: 60;
+  z-index: 1000;
   pointer-events: none;
-  animation: step-in 0.15s ease;
+  animation: hovercard-in 0.12s ease;
+}
+@keyframes hovercard-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .hovercard .row {
   display: flex;
@@ -517,8 +519,8 @@ body {
   width: 56px;
   flex-shrink: 0;
   position: relative;
-  align-self: stretch;
-  min-height: 47px;
+  height: 47px;
+  align-self: flex-start;
 }
 .connector .line {
   position: absolute;
